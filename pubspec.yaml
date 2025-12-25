@@ -1,0 +1,49 @@
+name: qodeia_fitness
+description: "QodeIA fitness - App híbrida con BLE HR, acelerómetro, motor Python, coach por voz y UI Aura neon."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # BLE y Sensores
+  flutter_blue_plus: ^1.31.0
+  permission_handler: ^11.3.1
+  sensors_plus: ^5.0.1
+
+  # Voz (TTS y STT)
+  flutter_tts: ^4.0.2
+  speech_to_text: ^6.6.1
+
+  # UI y Animaciones
+  flutter_animate: ^4.2.0
+  cupertino_icons: ^1.0.2
+
+  # Estado y Utilidades
+  provider: ^6.0.0
+  intl: ^0.19.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/sounds/
+
+  fonts:
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins-Regular.ttf
+        - asset: assets/fonts/Poppins-Bold.ttf
+          weight: 700
