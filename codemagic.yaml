@@ -1,0 +1,81 @@
+workflows:
+  android-release:
+    name: Android Release Build
+    instance_type: mac_mini_m1
+    max_build_duration: 60
+    environment:
+      java: default
+      ndk: r21e
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    triggering:
+      events:
+        - push
+        - tag
+      branch:
+        patterns:
+          - pattern: master
+            include: true
+          - pattern: main
+            include: true
+          - pattern: develop
+            include: true
+    scripts:
+      - name: Set up local.properties
+        script: |
+          echo "flutter.sdk=$HOME/programs/flutter" > android/local.properties
+      - name: Get Flutter packages
+        script: |
+          flutter pub get
+      - name: Build APK
+        script: |
+          flutter build apk --release
+      - name: Build AAB
+        script: |
+          flutter build appbundle --release
+    artifacts:
+      - build/app/outputs/flutter-apk/app-release.apk
+      - build/app/outputs/bundle/release/app-release.aab
+    publishing:
+      github_releases:
+        release: true
+        doc_type: markdown
+        doc_path: CHANGELOG.md
+      email:
+        recipients:
+          - $CODEMAGIC_EMAIL
+        notify:
+          success: true
+          failure: true
+
+  android-debug:
+    name: Android Debug Build
+    instance_type: mac_mini_m1
+    max_build_duration: 45
+    environment:
+      java: default
+      ndk: r21e
+      flutter: stable
+    triggering:
+      events:
+        - pull_request
+    scripts:
+      - name: Set up local.properties
+        script: |
+          echo "flutter.sdk=$HOME/programs/flutter" > android/local.properties
+      - name: Get Flutter packages
+        script: |
+          flutter pub get
+      - name: Build APK
+        script: |
+          flutter build apk
+    artifacts:
+      - build/app/outputs/flutter-apk/app-debug.apk
+    publishing:
+      email:
+        recipients:
+          - $CODEMAGIC_EMAIL
+        notify:
+          success: true
+          failure: true
