@@ -1,62 +1,27 @@
-def localProperties = new Properties()
-def localPropertiesFile = rootProject.file('local.properties')
-if (localPropertiesFile.exists()) {
-    localPropertiesFile.withReader('UTF-8') { reader ->
-        localProperties.load(reader)
-    }
+plugins {
+    id "com.android.application"
+    id "kotlin-android"
+    id "dev.flutter.flutter-gradle-plugin"
+    id "com.chaquo.python"
 }
-
-def flutterRoot = localProperties.getProperty('flutter.sdk')
-if (flutterRoot == null) {
-    throw new GradleException("Flutter SDK not found. Define location with flutter.sdk in the local.properties file.")
-}
-
-def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
-if (flutterVersionCode == null) {
-    flutterVersionCode = '1'
-}
-
-def flutterVersionName = localProperties.getProperty('flutter.versionName')
-if (flutterVersionName == null) {
-    flutterVersionName = '1.0'
-}
-
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
-apply plugin: 'com.chaquo.python'
-apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 
 android {
     namespace "com.example.qodeia_fitness"
     compileSdk 34
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-
-    kotlinOptions {
-        jvmTarget = '1.8'
-    }
-
-    sourceSets {
-        main.java.srcDirs += 'src/main/kotlin'
-        main.python.srcDir "src/main/python"
-    }
+    ndkVersion "25.1.8937393"
 
     defaultConfig {
         applicationId "com.example.qodeia_fitness"
         minSdk 24
         targetSdk 34
-        versionCode flutterVersionCode.toInteger()
-        versionName flutterVersionName
-
+        versionCode 1
+        versionName "1.0"
+        
         ndk {
-            abiFilters "armeabi-v7a", "arm64-v8a", "x86_64"
+           abiFilters "armeabi-v7a", "arm64-v8a"
         }
-
         python {
-            buildPython "python3"
+            version "3.8"
         }
     }
 
@@ -67,11 +32,6 @@ android {
     }
 }
 
-flutter {
-    source '../..'
-}
-
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    implementation "com.chaquo.python:python:3.11"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.8.0"
 }
