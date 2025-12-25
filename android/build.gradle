@@ -3,10 +3,14 @@ buildscript {
     repositories {
         google()
         mavenCentral()
+        // Esta línea es indispensable para descargar Chaquopy
+        maven { url "https://chaquo.com/maven" }
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:7.4.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        // Esta línea conecta el plugin de Python con Gradle
+        classpath "com.chaquo.python:gradle:15.0.1"
     }
 }
 
