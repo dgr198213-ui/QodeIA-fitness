@@ -6,13 +6,11 @@ workflows:
     environment:
       flutter: stable
     scripts:
-      - name: Configurar Proyecto
-        script: | 
-          cd $(find . -name "pubspec.yaml" -exec dirname {} \;)
+      - name: Get Flutter packages
+        script: |
           flutter pub get
       - name: Build APK
-        script: | 
-          cd $(find . -name "pubspec.yaml" -exec dirname {} \;)
+        script: |
           flutter build apk --release
     artifacts:
-      - "**/build/app/outputs/flutter-apk/*.apk"
+      - build/app/outputs/flutter-apk/*.apk
