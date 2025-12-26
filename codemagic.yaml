@@ -4,25 +4,40 @@ workflows:
     instance_type: mac_mini_m1
     max_build_duration: 60
     environment:
-      # CAMBIO CLAVE: Usamos una versión específica que sabemos que funciona
       flutter: 3.19.6
     scripts:
-      - name: Force Gradle 8.0 (Seguridad)
+      - name: Fix Android Files (Settings & Local Properties)
         script: |
           cd android
+          
+          # 1. Crear local.properties para que sepa dónde está Flutter
+          echo "flutter.sdk=$FLUTTER_ROOT" > local.properties
+          
+          # 2. Arreglar Gradle Wrapper (versión 8.0)
           mkdir -p gradle/wrapper
           echo "distributionBase=GRADLE_USER_HOME" > gradle/wrapper/gradle-wrapper.properties
           echo "distributionPath=wrapper/dists" >> gradle/wrapper/gradle-wrapper.properties
           echo "distributionUrl=https\://services.gradle.org/distributions/gradle-8.0-all.zip" >> gradle/wrapper/gradle-wrapper.properties
           echo "zipStoreBase=GRADLE_USER_HOME" >> gradle/wrapper/gradle-wrapper.properties
           echo "zipStorePath=wrapper/dists" >> gradle/wrapper/gradle-wrapper.properties
+
+          # 3. REESCRIBIR settings.gradle (Método Clásico a prueba de fallos)
+          echo "include ':app'" > settings.gradle
+          echo "def localPropertiesFile = new File(rootProject.projectDir, 'local.properties')" >> settings.gradle
+          echo "def properties = new Properties()" >> settings.gradle
+          echo "if (localPropertiesFile.exists()) {" >> settings.gradle
+          echo "    localPropertiesFile.withReader('UTF-8') { reader -> properties.load(reader) }" >> settings.gradle
+          echo "}" >> settings.gradle
+          echo "def flutterSdkPath = properties.getProperty('flutter.sdk')" >> settings.gradle
+          echo "if (flutterSdkPath != null) {" >> settings.gradle
+          echo "    apply from: \"\$flutterSdkPath/packages/flutter_tools/gradle/app_plugin_loader.gradle\"" >> settings.gradle
+          echo "}" >> settings.gradle
+
       - name: Get Flutter packages
         script: |
           flutter pub get
-      - name: Build APK Rapido (Solo ARM64)
+      - name: Build APK
         script: |
-          # Al bajar de versión, eliminamos el --target-platform para evitar conflictos
-          # Usamos el comando estándar que es más seguro en esta versión
           flutter build apk --release
     artifacts:
       - "**/build/app/outputs/flutter-apk/*.apk"
