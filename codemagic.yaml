@@ -6,7 +6,7 @@ workflows:
     environment:
       flutter: 3.19.6
     scripts:
-      - name: RECONSTRUCCION TOTAL ANDROID (Corrección flutterRoot)
+      - name: RECONSTRUCCION TOTAL (Con Mapa de Ruta)
         script: |
           cd android
           
@@ -64,9 +64,9 @@ workflows:
           echo "    delete rootProject.buildDir" >> build.gradle
           echo "}" >> build.gradle
 
-          # 5. APP BUILD.GRADLE (CORREGIDO: Leemos flutterRoot antes de usarlo)
+          # 5. APP BUILD.GRADLE
           cd app
-          # -- INICIO CORRECCION --
+          # Preparamos la lectura de propiedades
           echo "def localProperties = new Properties()" > build.gradle
           echo "def localPropertiesFile = rootProject.file('local.properties')" >> build.gradle
           echo "if (localPropertiesFile.exists()) {" >> build.gradle
@@ -76,13 +76,14 @@ workflows:
           echo "if (flutterRoot == null) {" >> build.gradle
           echo "    throw new GradleException(\"Flutter SDK not found.\")" >> build.gradle
           echo "}" >> build.gradle
-          # -- FIN CORRECCION --
 
+          # Aplicamos plugins
           echo "apply plugin: 'com.android.application'" >> build.gradle
           echo "apply plugin: 'kotlin-android'" >> build.gradle
           echo "apply from: \"\$flutterRoot/packages/flutter_tools/gradle/flutter.gradle\"" >> build.gradle
           echo "apply plugin: 'com.chaquo.python'" >> build.gradle
           
+          # Configuración Android
           echo "android {" >> build.gradle
           echo "    compileSdkVersion 34" >> build.gradle
           echo "    defaultConfig {" >> build.gradle
@@ -106,8 +107,14 @@ workflows:
           echo "    namespace 'com.example.qodeia_fitness'" >> build.gradle
           echo "}" >> build.gradle
           
+          # Dependencias y EL MAPA FINAL
           echo "dependencies {" >> build.gradle
           echo "    implementation \"org.jetbrains.kotlin:kotlin-stdlib:1.8.0\"" >> build.gradle
+          echo "}" >> build.gradle
+          
+          # --- ESTO ES LO QUE FALTABA ---
+          echo "flutter {" >> build.gradle
+          echo "    source '../..'" >> build.gradle
           echo "}" >> build.gradle
 
       - name: Get Flutter packages
