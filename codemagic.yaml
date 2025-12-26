@@ -1,24 +1,26 @@
 workflows:
-  android-release:
-    name: Android Release Build
-    instance_type: mac_mini_m2
-    max_build_duration: 60
+  android-workflow:
+    name: Android Workflow
+    max_build_duration: 120
+    instance_type: mac_mini_m1
     environment:
       flutter: 3.19.6
+      java: 17
+      groups:
+        - codemagic
     scripts:
       - name: Arreglar Archivos Android (+ AndroidX Activado)
         script: |
           cd android
           
-          # --- MEJORA: ACTIVAR ANDROIDX ---
-          # Esto elimina el warning y mejora la compatibilidad de librerias
+          # --- ACTIVAR ANDROIDX ---
           echo "android.useAndroidX=true" > gradle.properties
           echo "android.enableJetifier=true" >> gradle.properties
-
+          
           # 1. Crear local.properties
           echo "flutter.sdk=$FLUTTER_ROOT" > local.properties
           
-          # 2. Arreglar Gradle Wrapper (Mantenemos 8.0 por Chaquopy)
+          # 2. Gradle Wrapper (8.0 para compatibilidad Chaquopy)
           mkdir -p gradle/wrapper
           echo "distributionBase=GRADLE_USER_HOME" > gradle/wrapper/gradle-wrapper.properties
           echo "distributionPath=wrapper/dists" >> gradle/wrapper/gradle-wrapper.properties
@@ -26,7 +28,7 @@ workflows:
           echo "zipStoreBase=GRADLE_USER_HOME" >> gradle/wrapper/gradle-wrapper.properties
           echo "zipStorePath=wrapper/dists" >> gradle/wrapper/gradle-wrapper.properties
 
-          # 3. Settings.gradle (Estilo Clasico)
+          # 3. Settings.gradle
           echo "include ':app'" > settings.gradle
           echo "def localPropertiesFile = new File(rootProject.projectDir, 'local.properties')" >> settings.gradle
           echo "def properties = new Properties()" >> settings.gradle
@@ -38,14 +40,9 @@ workflows:
           echo "    apply from: \"\$flutterSdkPath/packages/flutter_tools/gradle/app_plugin_loader.gradle\"" >> settings.gradle
           echo "}" >> settings.gradle
 
-          # 4. Root build.gradle (Con variables globales para Plugins)
+          # 4. Root build.gradle (Compatible con plugins Flutter)
           echo "buildscript {" > build.gradle
-          echo "    ext {" >> build.gradle
-          echo "        kotlin_version = '1.8.0'" >> build.gradle
-          echo "        compileSdkVersion = 34" >> build.gradle
-          echo "        targetSdkVersion = 34" >> build.gradle
-          echo "        minSdkVersion = 24" >> build.gradle
-          echo "    }" >> build.gradle
+          echo "    ext.kotlin_version = '1.8.0'" >> build.gradle
           echo "    repositories {" >> build.gradle
           echo "        google()" >> build.gradle
           echo "        mavenCentral()" >> build.gradle
@@ -57,24 +54,35 @@ workflows:
           echo "        classpath 'com.chaquo.python:gradle:15.0.1'" >> build.gradle
           echo "    }" >> build.gradle
           echo "}" >> build.gradle
+          echo "" >> build.gradle
           echo "allprojects {" >> build.gradle
           echo "    repositories {" >> build.gradle
           echo "        google()" >> build.gradle
           echo "        mavenCentral()" >> build.gradle
           echo "    }" >> build.gradle
           echo "}" >> build.gradle
+          echo "" >> build.gradle
           echo "rootProject.buildDir = '../build'" >> build.gradle
           echo "subprojects {" >> build.gradle
           echo "    project.buildDir = \"\${rootProject.buildDir}/\${project.name}\"" >> build.gradle
-          echo "}" >> build.gradle
-          echo "subprojects {" >> build.gradle
           echo "    project.evaluationDependsOn(':app')" >> build.gradle
+          echo "" >> build.gradle
+          echo "    afterEvaluate { project ->" >> build.gradle
+          echo "        if (project.hasProperty('android')) {" >> build.gradle
+          echo "            android {" >> build.gradle
+          echo "                if (!android.hasProperty('compileSdkVersion')) {" >> build.gradle
+          echo "                    compileSdkVersion 34" >> build.gradle
+          echo "                }" >> build.gradle
+          echo "            }" >> build.gradle
+          echo "        }" >> build.gradle
+          echo "    }" >> build.gradle
           echo "}" >> build.gradle
+          echo "" >> build.gradle
           echo "tasks.register('clean', Delete) {" >> build.gradle
           echo "    delete rootProject.buildDir" >> build.gradle
           echo "}" >> build.gradle
 
-          # 5. App build.gradle (Con lectura de propiedades segura)
+          # 5. App build.gradle
           cd app
           echo "def localProperties = new Properties()" > build.gradle
           echo "def localPropertiesFile = rootProject.file('local.properties')" >> build.gradle
@@ -85,18 +93,18 @@ workflows:
           echo "if (flutterRoot == null) {" >> build.gradle
           echo "    throw new GradleException(\"Flutter SDK not found.\")" >> build.gradle
           echo "}" >> build.gradle
-
+          echo "" >> build.gradle
           echo "apply plugin: 'com.android.application'" >> build.gradle
           echo "apply plugin: 'kotlin-android'" >> build.gradle
           echo "apply from: \"\$flutterRoot/packages/flutter_tools/gradle/flutter.gradle\"" >> build.gradle
           echo "apply plugin: 'com.chaquo.python'" >> build.gradle
-          
+          echo "" >> build.gradle
           echo "android {" >> build.gradle
-          echo "    compileSdkVersion rootProject.ext.compileSdkVersion" >> build.gradle
+          echo "    compileSdkVersion 34" >> build.gradle
           echo "    defaultConfig {" >> build.gradle
           echo "        applicationId \"com.example.qodeia_fitness\"" >> build.gradle
-          echo "        minSdkVersion rootProject.ext.minSdkVersion" >> build.gradle
-          echo "        targetSdkVersion rootProject.ext.targetSdkVersion" >> build.gradle
+          echo "        minSdkVersion 24" >> build.gradle
+          echo "        targetSdkVersion 34" >> build.gradle
           echo "        versionCode 1" >> build.gradle
           echo "        versionName \"1.0\"" >> build.gradle
           echo "        ndk {" >> build.gradle
@@ -113,11 +121,11 @@ workflows:
           echo "    }" >> build.gradle
           echo "    namespace 'com.example.qodeia_fitness'" >> build.gradle
           echo "}" >> build.gradle
-          
+          echo "" >> build.gradle
           echo "dependencies {" >> build.gradle
           echo "    implementation \"org.jetbrains.kotlin:kotlin-stdlib:\$kotlin_version\"" >> build.gradle
           echo "}" >> build.gradle
-          
+          echo "" >> build.gradle
           echo "flutter {" >> build.gradle
           echo "    source '../..'" >> build.gradle
           echo "}" >> build.gradle
@@ -125,8 +133,19 @@ workflows:
       - name: Get Flutter packages
         script: |
           flutter pub get
+          
       - name: Build APK
         script: |
           flutter build apk --release
+          
     artifacts:
-      - "**/build/app/outputs/flutter-apk/*.apk"
+      - build/**/outputs/**/*.apk
+      - build/**/outputs/**/mapping.txt
+      - flutter_drive.log
+    publishing:
+      email:
+        recipients:
+          - tu_email@ejemplo.com
+        notify:
+          success: true
+          failure: true
