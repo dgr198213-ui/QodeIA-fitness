@@ -1,19 +1,19 @@
 workflows:
   android-release:
     name: Android Release Build
-    instance_type: mac_mini_m1
+    instance_type: mac_mini_m2
     max_build_duration: 60
     environment:
       flutter: 3.19.6
     scripts:
-      - name: RECONSTRUCCION TOTAL (Con Variables Globales)
+      - name: Arreglar Archivos Android (Solución Final)
         script: |
           cd android
           
           # 1. Crear local.properties
           echo "flutter.sdk=$FLUTTER_ROOT" > local.properties
           
-          # 2. Wrapper Gradle 8.0
+          # 2. Arreglar Gradle Wrapper (8.0)
           mkdir -p gradle/wrapper
           echo "distributionBase=GRADLE_USER_HOME" > gradle/wrapper/gradle-wrapper.properties
           echo "distributionPath=wrapper/dists" >> gradle/wrapper/gradle-wrapper.properties
@@ -21,7 +21,7 @@ workflows:
           echo "zipStoreBase=GRADLE_USER_HOME" >> gradle/wrapper/gradle-wrapper.properties
           echo "zipStorePath=wrapper/dists" >> gradle/wrapper/gradle-wrapper.properties
 
-          # 3. SETTINGS.GRADLE
+          # 3. Arreglar settings.gradle (Estilo clásico)
           echo "include ':app'" > settings.gradle
           echo "def localPropertiesFile = new File(rootProject.projectDir, 'local.properties')" >> settings.gradle
           echo "def properties = new Properties()" >> settings.gradle
@@ -33,16 +33,14 @@ workflows:
           echo "    apply from: \"\$flutterSdkPath/packages/flutter_tools/gradle/app_plugin_loader.gradle\"" >> settings.gradle
           echo "}" >> settings.gradle
 
-          # 4. ROOT BUILD.GRADLE (AHORA CON VARIABLES GLOBALES)
+          # 4. Arreglar build.gradle RAÍZ (Con variables globales para Plugins)
           echo "buildscript {" > build.gradle
-          # --- AQUI ESTA LA MAGIA QUE FALTABA ---
           echo "    ext {" >> build.gradle
           echo "        kotlin_version = '1.8.0'" >> build.gradle
           echo "        compileSdkVersion = 34" >> build.gradle
           echo "        targetSdkVersion = 34" >> build.gradle
           echo "        minSdkVersion = 24" >> build.gradle
           echo "    }" >> build.gradle
-          # --------------------------------------
           echo "    repositories {" >> build.gradle
           echo "        google()" >> build.gradle
           echo "        mavenCentral()" >> build.gradle
@@ -54,14 +52,12 @@ workflows:
           echo "        classpath 'com.chaquo.python:gradle:15.0.1'" >> build.gradle
           echo "    }" >> build.gradle
           echo "}" >> build.gradle
-          
           echo "allprojects {" >> build.gradle
           echo "    repositories {" >> build.gradle
           echo "        google()" >> build.gradle
           echo "        mavenCentral()" >> build.gradle
           echo "    }" >> build.gradle
           echo "}" >> build.gradle
-          
           echo "rootProject.buildDir = '../build'" >> build.gradle
           echo "subprojects {" >> build.gradle
           echo "    project.buildDir = \"\${rootProject.buildDir}/\${project.name}\"" >> build.gradle
@@ -73,9 +69,8 @@ workflows:
           echo "    delete rootProject.buildDir" >> build.gradle
           echo "}" >> build.gradle
 
-          # 5. APP BUILD.GRADLE
+          # 5. Arreglar app/build.gradle (Con lectura de propiedades segura)
           cd app
-          # Preparamos la lectura de propiedades
           echo "def localProperties = new Properties()" > build.gradle
           echo "def localPropertiesFile = rootProject.file('local.properties')" >> build.gradle
           echo "if (localPropertiesFile.exists()) {" >> build.gradle
@@ -86,19 +81,17 @@ workflows:
           echo "    throw new GradleException(\"Flutter SDK not found.\")" >> build.gradle
           echo "}" >> build.gradle
 
-          # Aplicamos plugins
           echo "apply plugin: 'com.android.application'" >> build.gradle
           echo "apply plugin: 'kotlin-android'" >> build.gradle
           echo "apply from: \"\$flutterRoot/packages/flutter_tools/gradle/flutter.gradle\"" >> build.gradle
           echo "apply plugin: 'com.chaquo.python'" >> build.gradle
           
-          # Configuración Android
           echo "android {" >> build.gradle
-          echo "    compileSdkVersion rootProject.ext.compileSdkVersion" >> build.gradle # Usamos la variable global
+          echo "    compileSdkVersion rootProject.ext.compileSdkVersion" >> build.gradle
           echo "    defaultConfig {" >> build.gradle
           echo "        applicationId \"com.example.qodeia_fitness\"" >> build.gradle
-          echo "        minSdkVersion rootProject.ext.minSdkVersion" >> build.gradle # Usamos la variable global
-          echo "        targetSdkVersion rootProject.ext.targetSdkVersion" >> build.gradle # Usamos la variable global
+          echo "        minSdkVersion rootProject.ext.minSdkVersion" >> build.gradle
+          echo "        targetSdkVersion rootProject.ext.targetSdkVersion" >> build.gradle
           echo "        versionCode 1" >> build.gradle
           echo "        versionName \"1.0\"" >> build.gradle
           echo "        ndk {" >> build.gradle
@@ -116,12 +109,10 @@ workflows:
           echo "    namespace 'com.example.qodeia_fitness'" >> build.gradle
           echo "}" >> build.gradle
           
-          # Dependencias
           echo "dependencies {" >> build.gradle
           echo "    implementation \"org.jetbrains.kotlin:kotlin-stdlib:\$kotlin_version\"" >> build.gradle
           echo "}" >> build.gradle
           
-          # Mapa de ruta Flutter
           echo "flutter {" >> build.gradle
           echo "    source '../..'" >> build.gradle
           echo "}" >> build.gradle
