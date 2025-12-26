@@ -6,6 +6,17 @@ workflows:
     environment:
       flutter: stable
     scripts:
+      - name: Force Gradle 8.0 (Fix Permissions Error)
+        script: |
+          cd android
+          # Creamos la carpeta necesaria
+          mkdir -p gradle/wrapper
+          # Inyectamos la configuración correcta línea a línea
+          echo "distributionBase=GRADLE_USER_HOME" > gradle/wrapper/gradle-wrapper.properties
+          echo "distributionPath=wrapper/dists" >> gradle/wrapper/gradle-wrapper.properties
+          echo "distributionUrl=https\://services.gradle.org/distributions/gradle-8.0-all.zip" >> gradle/wrapper/gradle-wrapper.properties
+          echo "zipStoreBase=GRADLE_USER_HOME" >> gradle/wrapper/gradle-wrapper.properties
+          echo "zipStorePath=wrapper/dists" >> gradle/wrapper/gradle-wrapper.properties
       - name: Get Flutter packages
         script: |
           flutter pub get
@@ -13,4 +24,4 @@ workflows:
         script: |
           flutter build apk --release
     artifacts:
-      - build/app/outputs/flutter-apk/*.apk
+      - "**/build/app/outputs/flutter-apk/*.apk"
