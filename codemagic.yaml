@@ -6,14 +6,19 @@ workflows:
     environment:
       flutter: 3.19.6
     scripts:
-      - name: Arreglar Archivos Android (Solución Final)
+      - name: Arreglar Archivos Android (+ AndroidX Activado)
         script: |
           cd android
           
+          # --- MEJORA: ACTIVAR ANDROIDX ---
+          # Esto elimina el warning y mejora la compatibilidad de librerias
+          echo "android.useAndroidX=true" > gradle.properties
+          echo "android.enableJetifier=true" >> gradle.properties
+
           # 1. Crear local.properties
           echo "flutter.sdk=$FLUTTER_ROOT" > local.properties
           
-          # 2. Arreglar Gradle Wrapper (8.0)
+          # 2. Arreglar Gradle Wrapper (Mantenemos 8.0 por Chaquopy)
           mkdir -p gradle/wrapper
           echo "distributionBase=GRADLE_USER_HOME" > gradle/wrapper/gradle-wrapper.properties
           echo "distributionPath=wrapper/dists" >> gradle/wrapper/gradle-wrapper.properties
@@ -21,7 +26,7 @@ workflows:
           echo "zipStoreBase=GRADLE_USER_HOME" >> gradle/wrapper/gradle-wrapper.properties
           echo "zipStorePath=wrapper/dists" >> gradle/wrapper/gradle-wrapper.properties
 
-          # 3. Arreglar settings.gradle (Estilo clásico)
+          # 3. Settings.gradle (Estilo Clasico)
           echo "include ':app'" > settings.gradle
           echo "def localPropertiesFile = new File(rootProject.projectDir, 'local.properties')" >> settings.gradle
           echo "def properties = new Properties()" >> settings.gradle
@@ -33,7 +38,7 @@ workflows:
           echo "    apply from: \"\$flutterSdkPath/packages/flutter_tools/gradle/app_plugin_loader.gradle\"" >> settings.gradle
           echo "}" >> settings.gradle
 
-          # 4. Arreglar build.gradle RAÍZ (Con variables globales para Plugins)
+          # 4. Root build.gradle (Con variables globales para Plugins)
           echo "buildscript {" > build.gradle
           echo "    ext {" >> build.gradle
           echo "        kotlin_version = '1.8.0'" >> build.gradle
@@ -69,7 +74,7 @@ workflows:
           echo "    delete rootProject.buildDir" >> build.gradle
           echo "}" >> build.gradle
 
-          # 5. Arreglar app/build.gradle (Con lectura de propiedades segura)
+          # 5. App build.gradle (Con lectura de propiedades segura)
           cd app
           echo "def localProperties = new Properties()" > build.gradle
           echo "def localPropertiesFile = rootProject.file('local.properties')" >> build.gradle
