@@ -6,14 +6,14 @@ workflows:
     environment:
       flutter: 3.19.6
     scripts:
-      - name: Fix Android Files (Settings & Local Properties)
+      - name: RECONSTRUCCION TOTAL ANDROID (A prueba de fallos)
         script: |
           cd android
           
-          # 1. Crear local.properties para que sepa dónde está Flutter
+          # 1. Crear local.properties
           echo "flutter.sdk=$FLUTTER_ROOT" > local.properties
           
-          # 2. Arreglar Gradle Wrapper (versión 8.0)
+          # 2. Wrapper Gradle 8.0
           mkdir -p gradle/wrapper
           echo "distributionBase=GRADLE_USER_HOME" > gradle/wrapper/gradle-wrapper.properties
           echo "distributionPath=wrapper/dists" >> gradle/wrapper/gradle-wrapper.properties
@@ -21,7 +21,7 @@ workflows:
           echo "zipStoreBase=GRADLE_USER_HOME" >> gradle/wrapper/gradle-wrapper.properties
           echo "zipStorePath=wrapper/dists" >> gradle/wrapper/gradle-wrapper.properties
 
-          # 3. REESCRIBIR settings.gradle (Método Clásico a prueba de fallos)
+          # 3. SETTINGS.GRADLE (Estilo Clásico)
           echo "include ':app'" > settings.gradle
           echo "def localPropertiesFile = new File(rootProject.projectDir, 'local.properties')" >> settings.gradle
           echo "def properties = new Properties()" >> settings.gradle
@@ -32,6 +32,71 @@ workflows:
           echo "if (flutterSdkPath != null) {" >> settings.gradle
           echo "    apply from: \"\$flutterSdkPath/packages/flutter_tools/gradle/app_plugin_loader.gradle\"" >> settings.gradle
           echo "}" >> settings.gradle
+
+          # 4. ROOT BUILD.GRADLE (Aquí definimos las versiones para que no falle)
+          echo "buildscript {" > build.gradle
+          echo "    ext.kotlin_version = '1.8.0'" >> build.gradle
+          echo "    repositories {" >> build.gradle
+          echo "        google()" >> build.gradle
+          echo "        mavenCentral()" >> build.gradle
+          echo "        maven { url 'https://chaquo.com/maven' }" >> build.gradle
+          echo "    }" >> build.gradle
+          echo "    dependencies {" >> build.gradle
+          echo "        classpath 'com.android.tools.build:gradle:7.4.2'" >> build.gradle
+          echo "        classpath \"org.jetbrains.kotlin:kotlin-gradle-plugin:\$kotlin_version\"" >> build.gradle
+          echo "        classpath 'com.chaquo.python:gradle:15.0.1'" >> build.gradle
+          echo "    }" >> build.gradle
+          echo "}" >> build.gradle
+          echo "allprojects {" >> build.gradle
+          echo "    repositories {" >> build.gradle
+          echo "        google()" >> build.gradle
+          echo "        mavenCentral()" >> build.gradle
+          echo "    }" >> build.gradle
+          echo "}" >> build.gradle
+          echo "rootProject.buildDir = '../build'" >> build.gradle
+          echo "subprojects {" >> build.gradle
+          echo "    project.buildDir = \"\${rootProject.buildDir}/\${project.name}\"" >> build.gradle
+          echo "}" >> build.gradle
+          echo "subprojects {" >> build.gradle
+          echo "    project.evaluationDependsOn(':app')" >> build.gradle
+          echo "}" >> build.gradle
+          echo "tasks.register('clean', Delete) {" >> build.gradle
+          echo "    delete rootProject.buildDir" >> build.gradle
+          echo "}" >> build.gradle
+
+          # 5. APP BUILD.GRADLE (Estilo 'Apply Plugin' para evitar errores de versión)
+          cd app
+          echo "apply plugin: 'com.android.application'" > build.gradle
+          echo "apply plugin: 'kotlin-android'" >> build.gradle
+          echo "apply from: \"\$flutterRoot/packages/flutter_tools/gradle/flutter.gradle\"" >> build.gradle
+          echo "apply plugin: 'com.chaquo.python'" >> build.gradle
+          
+          echo "android {" >> build.gradle
+          echo "    compileSdkVersion 34" >> build.gradle
+          echo "    defaultConfig {" >> build.gradle
+          echo "        applicationId \"com.example.qodeia_fitness\"" >> build.gradle
+          echo "        minSdkVersion 24" >> build.gradle
+          echo "        targetSdkVersion 34" >> build.gradle
+          echo "        versionCode 1" >> build.gradle
+          echo "        versionName \"1.0\"" >> build.gradle
+          echo "        ndk {" >> build.gradle
+          echo "           abiFilters \"armeabi-v7a\", \"arm64-v8a\"" >> build.gradle
+          echo "        }" >> build.gradle
+          echo "        python {" >> build.gradle
+          echo "            version \"3.8\"" >> build.gradle
+          echo "        }" >> build.gradle
+          echo "    }" >> build.gradle
+          echo "    buildTypes {" >> build.gradle
+          echo "        release {" >> build.gradle
+          echo "            signingConfig signingConfigs.debug" >> build.gradle
+          echo "        }" >> build.gradle
+          echo "    }" >> build.gradle
+          echo "    namespace 'com.example.qodeia_fitness'" >> build.gradle
+          echo "}" >> build.gradle
+          
+          echo "dependencies {" >> build.gradle
+          echo "    implementation \"org.jetbrains.kotlin:kotlin-stdlib:1.8.0\"" >> build.gradle
+          echo "}" >> build.gradle
 
       - name: Get Flutter packages
         script: |
