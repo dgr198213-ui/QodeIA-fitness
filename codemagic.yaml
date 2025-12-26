@@ -6,7 +6,7 @@ workflows:
     environment:
       flutter: 3.19.6
     scripts:
-      - name: RECONSTRUCCION TOTAL ANDROID (A prueba de fallos)
+      - name: RECONSTRUCCION TOTAL ANDROID (Corrección flutterRoot)
         script: |
           cd android
           
@@ -21,7 +21,7 @@ workflows:
           echo "zipStoreBase=GRADLE_USER_HOME" >> gradle/wrapper/gradle-wrapper.properties
           echo "zipStorePath=wrapper/dists" >> gradle/wrapper/gradle-wrapper.properties
 
-          # 3. SETTINGS.GRADLE (Estilo Clásico)
+          # 3. SETTINGS.GRADLE
           echo "include ':app'" > settings.gradle
           echo "def localPropertiesFile = new File(rootProject.projectDir, 'local.properties')" >> settings.gradle
           echo "def properties = new Properties()" >> settings.gradle
@@ -33,7 +33,7 @@ workflows:
           echo "    apply from: \"\$flutterSdkPath/packages/flutter_tools/gradle/app_plugin_loader.gradle\"" >> settings.gradle
           echo "}" >> settings.gradle
 
-          # 4. ROOT BUILD.GRADLE (Aquí definimos las versiones para que no falle)
+          # 4. ROOT BUILD.GRADLE
           echo "buildscript {" > build.gradle
           echo "    ext.kotlin_version = '1.8.0'" >> build.gradle
           echo "    repositories {" >> build.gradle
@@ -64,9 +64,21 @@ workflows:
           echo "    delete rootProject.buildDir" >> build.gradle
           echo "}" >> build.gradle
 
-          # 5. APP BUILD.GRADLE (Estilo 'Apply Plugin' para evitar errores de versión)
+          # 5. APP BUILD.GRADLE (CORREGIDO: Leemos flutterRoot antes de usarlo)
           cd app
-          echo "apply plugin: 'com.android.application'" > build.gradle
+          # -- INICIO CORRECCION --
+          echo "def localProperties = new Properties()" > build.gradle
+          echo "def localPropertiesFile = rootProject.file('local.properties')" >> build.gradle
+          echo "if (localPropertiesFile.exists()) {" >> build.gradle
+          echo "    localPropertiesFile.withReader('UTF-8') { reader -> localProperties.load(reader) }" >> build.gradle
+          echo "}" >> build.gradle
+          echo "def flutterRoot = localProperties.getProperty('flutter.sdk')" >> build.gradle
+          echo "if (flutterRoot == null) {" >> build.gradle
+          echo "    throw new GradleException(\"Flutter SDK not found.\")" >> build.gradle
+          echo "}" >> build.gradle
+          # -- FIN CORRECCION --
+
+          echo "apply plugin: 'com.android.application'" >> build.gradle
           echo "apply plugin: 'kotlin-android'" >> build.gradle
           echo "apply from: \"\$flutterRoot/packages/flutter_tools/gradle/flutter.gradle\"" >> build.gradle
           echo "apply plugin: 'com.chaquo.python'" >> build.gradle
