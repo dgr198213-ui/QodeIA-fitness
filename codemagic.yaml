@@ -4,9 +4,10 @@ workflows:
     instance_type: mac_mini_m1
     max_build_duration: 60
     environment:
-      flutter: stable
+      # CAMBIO CLAVE: Usamos una versión específica que sabemos que funciona
+      flutter: 3.19.6
     scripts:
-      - name: Force Gradle 8.0 (INDISPENSABLE)
+      - name: Force Gradle 8.0 (Seguridad)
         script: |
           cd android
           mkdir -p gradle/wrapper
@@ -20,7 +21,8 @@ workflows:
           flutter pub get
       - name: Build APK Rapido (Solo ARM64)
         script: |
-          # Sin ofuscación y solo para móviles modernos para máxima velocidad
-          flutter build apk --release --target-platform android-arm64
+          # Al bajar de versión, eliminamos el --target-platform para evitar conflictos
+          # Usamos el comando estándar que es más seguro en esta versión
+          flutter build apk --release
     artifacts:
       - "**/build/app/outputs/flutter-apk/*.apk"
