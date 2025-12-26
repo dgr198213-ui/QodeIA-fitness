@@ -6,7 +6,7 @@ workflows:
     environment:
       flutter: 3.19.6
     scripts:
-      - name: RECONSTRUCCION TOTAL (Con Mapa de Ruta)
+      - name: RECONSTRUCCION TOTAL (Con Variables Globales)
         script: |
           cd android
           
@@ -33,9 +33,16 @@ workflows:
           echo "    apply from: \"\$flutterSdkPath/packages/flutter_tools/gradle/app_plugin_loader.gradle\"" >> settings.gradle
           echo "}" >> settings.gradle
 
-          # 4. ROOT BUILD.GRADLE
+          # 4. ROOT BUILD.GRADLE (AHORA CON VARIABLES GLOBALES)
           echo "buildscript {" > build.gradle
-          echo "    ext.kotlin_version = '1.8.0'" >> build.gradle
+          # --- AQUI ESTA LA MAGIA QUE FALTABA ---
+          echo "    ext {" >> build.gradle
+          echo "        kotlin_version = '1.8.0'" >> build.gradle
+          echo "        compileSdkVersion = 34" >> build.gradle
+          echo "        targetSdkVersion = 34" >> build.gradle
+          echo "        minSdkVersion = 24" >> build.gradle
+          echo "    }" >> build.gradle
+          # --------------------------------------
           echo "    repositories {" >> build.gradle
           echo "        google()" >> build.gradle
           echo "        mavenCentral()" >> build.gradle
@@ -47,12 +54,14 @@ workflows:
           echo "        classpath 'com.chaquo.python:gradle:15.0.1'" >> build.gradle
           echo "    }" >> build.gradle
           echo "}" >> build.gradle
+          
           echo "allprojects {" >> build.gradle
           echo "    repositories {" >> build.gradle
           echo "        google()" >> build.gradle
           echo "        mavenCentral()" >> build.gradle
           echo "    }" >> build.gradle
           echo "}" >> build.gradle
+          
           echo "rootProject.buildDir = '../build'" >> build.gradle
           echo "subprojects {" >> build.gradle
           echo "    project.buildDir = \"\${rootProject.buildDir}/\${project.name}\"" >> build.gradle
@@ -85,11 +94,11 @@ workflows:
           
           # Configuración Android
           echo "android {" >> build.gradle
-          echo "    compileSdkVersion 34" >> build.gradle
+          echo "    compileSdkVersion rootProject.ext.compileSdkVersion" >> build.gradle # Usamos la variable global
           echo "    defaultConfig {" >> build.gradle
           echo "        applicationId \"com.example.qodeia_fitness\"" >> build.gradle
-          echo "        minSdkVersion 24" >> build.gradle
-          echo "        targetSdkVersion 34" >> build.gradle
+          echo "        minSdkVersion rootProject.ext.minSdkVersion" >> build.gradle # Usamos la variable global
+          echo "        targetSdkVersion rootProject.ext.targetSdkVersion" >> build.gradle # Usamos la variable global
           echo "        versionCode 1" >> build.gradle
           echo "        versionName \"1.0\"" >> build.gradle
           echo "        ndk {" >> build.gradle
@@ -107,12 +116,12 @@ workflows:
           echo "    namespace 'com.example.qodeia_fitness'" >> build.gradle
           echo "}" >> build.gradle
           
-          # Dependencias y EL MAPA FINAL
+          # Dependencias
           echo "dependencies {" >> build.gradle
-          echo "    implementation \"org.jetbrains.kotlin:kotlin-stdlib:1.8.0\"" >> build.gradle
+          echo "    implementation \"org.jetbrains.kotlin:kotlin-stdlib:\$kotlin_version\"" >> build.gradle
           echo "}" >> build.gradle
           
-          # --- ESTO ES LO QUE FALTABA ---
+          # Mapa de ruta Flutter
           echo "flutter {" >> build.gradle
           echo "    source '../..'" >> build.gradle
           echo "}" >> build.gradle
